@@ -28,9 +28,9 @@ class FontWebParser:
             "Authorization": f"Bearer {FIRECRAWL_API_KEY}",
             "Content-Type": "application/json"
         }
-        # Временно отключаем OpenAI для тестирования
+        # Полностью отключаем OpenAI для тестирования
         self.openai_client = None
-        print("OpenAI client temporarily disabled for testing")
+        print("OpenAI client completely disabled for testing")
     
     def parse_font_from_url(self, font_url):
         """Парсинг шрифта по URL"""
@@ -550,10 +550,11 @@ Elements: Modern geometric shapes, clean lines, minimal decorative elements.'''
 
 # Создаем экземпляр парсера
 parser = FontWebParser()
-# Экземпляр парсера Fiverr - временно отключаем для тестирования
+# Экземпляр парсера Fiverr - полностью отключаем для тестирования
 # fiverr_parser_instance = FiverrParser()
 fiverr_parser_instance = None
-print("FiverrParser temporarily disabled for testing")
+print("FiverrParser completely disabled for testing")
+print("All OpenAI clients disabled to prevent initialization errors")
 
 @app.route('/')
 def index():
