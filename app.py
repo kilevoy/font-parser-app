@@ -28,9 +28,23 @@ class FontWebParser:
             "Authorization": f"Bearer {FIRECRAWL_API_KEY}",
             "Content-Type": "application/json"
         }
-        # Полностью отключаем OpenAI для тестирования
-        self.openai_client = None
-        print("OpenAI client completely disabled for testing")
+        try:
+            self.openai_client = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
+        except TypeError as e:
+            if 'proxies' in str(e):
+                print(f"OpenAI client initialization failed due to 'proxies' argument: {str(e)}")
+                print("Falling back to OpenAI client without problematic parameters")
+                try:
+                    self.openai_client = OpenAI(api_key=OPENAI_API_KEY)
+                except Exception as e2:
+                    print(f"OpenAI client initialization failed completely: {str(e2)}")
+                    self.openai_client = None
+            else:
+                print(f"Error initializing OpenAI client in FontWebParser: {str(e)}")
+                self.openai_client = None
+        except Exception as e:
+            print(f"Error initializing OpenAI client in FontWebParser: {str(e)}")
+            self.openai_client = None
     
     def parse_font_from_url(self, font_url):
         """Парсинг шрифта по URL"""
@@ -550,11 +564,8 @@ Elements: Modern geometric shapes, clean lines, minimal decorative elements.'''
 
 # Создаем экземпляр парсера
 parser = FontWebParser()
-# Экземпляр парсера Fiverr - полностью отключаем для тестирования
-# fiverr_parser_instance = FiverrParser()
-fiverr_parser_instance = None
-print("FiverrParser completely disabled for testing")
-print("All OpenAI clients disabled to prevent initialization errors")
+# Экземпляр парсера Fiverr
+fiverr_parser_instance = FiverrParser()
 
 @app.route('/')
 def index():
@@ -582,9 +593,6 @@ def parse_fiverr():
 
     if not gig_url:
         return jsonify({"error": "Введите ссылку на Fiverr gig"})
-
-    if fiverr_parser_instance is None:
-        return jsonify({"error": "Fiverr parser temporarily disabled for testing"})
 
     result = fiverr_parser_instance.parse(gig_url)
     return jsonify(result)
