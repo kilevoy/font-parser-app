@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💙 Font Parser для Дюши 💙</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #87CEEB 0%, #4169E1 50%, #FF69B4 100%);
+            min-height: 100vh;
+            color: #333;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '❤️ ❤️ ❤️ ❤️ ❤️ ❤️ ❤️ ❤️ ❤️ ❤️ ❤️ ❤️ ❤️ ❤️ ❤️ ❤️ ❤️ ❤️ ❤️ ❤️';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            font-size: 2rem;
+            color: rgba(255, 255, 255, 0.15);
+            pointer-events: none;
+            z-index: 0;
+            animation: hearts 20s linear infinite;
+            white-space: nowrap;
+            line-height: 4rem;
+            overflow: hidden;
+        }
+
+        @keyframes hearts {
+            0% { transform: translateY(100vh); }
+            100% { transform: translateY(-100vh); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        .input-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .input-wrapper {
+            flex: 1;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-direction: column;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .parse-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+
+        .parse-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .parse-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 140px;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(72, 187, 120, 0.3);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: white;
+        }
+
+        .loading i {
+            font-size: 2rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .results, .results-fiverr {
+            display: none;
+        }
+
+        .block {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+        }
+
+        .block-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .block-content {
+            line-height: 1.6;
+        }
+
+        .font-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .font-description {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #4a5568;
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .glyph-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .glyph-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .glyph-item img {
+            width: 100%;
+            max-width: 280px;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .glyph-item a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.8rem;
+            word-break: break-all;
+            display: block;
+        }
+
+        .glyph-item a:hover {
+            text-decoration: underline;
+        }
+
+        .no-glyphs {
+            text-align: center;
+            color: #718096;
+            font-style: italic;
+            padding: 2rem;
+        }
+
+        .description {
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            margin: 1rem 0;
+        }
+
+        .links {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .link-item {
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .link-item strong {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+        }
+
+        .link-item a {
+            color: #667eea;
+            text-decoration: none;
+            word-break: break-all;
+            font-size: 0.9rem;
+        }
+
+        .link-item a:hover {
+            text-decoration: underline;
+        }
+
+        .prompt-box {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 1.5rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .prompt-container {
+            position: relative;
+        }
+
+        .copy-prompt-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .copy-prompt-btn:hover {
+            background: #38a169;
+        }
+
+        .copy-prompt-btn.copied {
+            background: #68d391;
+        }
+
+        .seo-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .seo-list li {
+            background: #f8fafc;
+            margin: 0.5rem 0;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .json-container {
+            position: relative;
+        }
+
+        .json-code {
+            background: #1a202c;
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 1.5rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #5a67d8;
+        }
+
+        .copy-btn.copied {
+            background: #48bb78;
+        }
+
+        .fill-form-instruction-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .fill-form-instruction-btn:hover {
+            background: #c53030;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(229, 62, 62, 0.3);
+        }
+
+        .form-iframe {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: white;
+        }
+
+        .upload-instructions {
+            background: #f0f8ff;
+            border: 1px solid #bee3f8;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            color: #2b6cb0;
+            position: relative;
+        }
+
+        .upload-instructions h4 {
+            margin-bottom: 0.5rem;
+            color: #2c5282;
+        }
+
+        .upload-instructions ul {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+
+        .upload-instructions li {
+            margin: 0.3rem 0;
+        }
+
+        .error {
+            background: #fed7d7;
+            border: 1px solid #fc8181;
+            color: #c53030;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+
+        .keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .keyword {
+            background: linear-gradient(135deg, #87CEEB 0%, #4169E1 100%);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(65, 105, 225, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .keyword:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(65, 105, 225, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .button-group {
+                flex-direction: row;
+            }
+
+            .links {
+                grid-template-columns: 1fr;
+            }
+
+            .block {
+                padding: 1.5rem;
+            }
+
+            .glyph-gallery {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💙 Font Parser для Дюши 💙</h1>
+            <p>Создано с любовью для самой лучшей Дюши 💙</p>
+            <p class="subtitle">Анализ шрифтов Creative Fabrica с голубыми сердечками</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group" style="margin-bottom:1.5rem;">
+                <div class="input-wrapper">
+                    <label for="fontUrl">🔗 Ссылка на шрифт Creative Fabrica:</label>
+                    <input type="url" id="fontUrl" placeholder="https://www.creativefabrica.com/product/..." required>
+                </div>
+                <div class="button-group">
+                    <button class="parse-btn" onclick="parseFont()">Разобрать CF</button>
+                </div>
+            </div>
+
+            <!-- FIVERR PARSER -->
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <label for="gigUrl">🔗 Ссылка на Fiverr Gig:</label>
+                    <input type="url" id="gigUrl" placeholder="https://www.fiverr.com/username/awesome-gig" required>
+                </div>
+                <div class="button-group">
+                    <button class="parse-btn" onclick="parseFiverr()" style="background:#ff7f50">Разобрать Fiverr</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <i class="fas fa-spinner"></i>
+            <p>Анализируем шрифт... Пожалуйста, подождите</p>
+        </div>
+
+        <div class="results" id="results">
+            <!-- Блок 1: Основная информация -->
+            <div class="block">
+                <div class="block-title">
+                    <i class="fas fa-info-circle"></i>
+                    БЛОК 1: Основная информация
+                </div>
+                <div class="block-content" id="block1"></div>
+            </div>
+
+            <!-- Блок 2: Глифы с превью -->
+            <div class="block">
+                <div class="block-title">
+                    <i class="fas fa-images"></i>
+                    БЛОК 2: Глифы с превью
+                </div>
+                <div class="block-content" id="block2"></div>
+            </div>
+
+            <!-- Блок 3: Промпт для генерации изображения -->
+            <div class="block">
+                <div class="block-title">
+                    <i class="fas fa-image"></i>
+                    БЛОК 3: Промпт для генерации изображения
+                </div>
+                <div class="block-content" id="block3"></div>
+            </div>
+
+            <!-- Блок 4: Pinterest SEO -->
+            <div class="block">
+                <div class="block-title">
+                    <i class="fab fa-pinterest"></i>
+                    БЛОК 4: Pinterest SEO
+                </div>
+                <div class="block-content" id="block4"></div>
+            </div>
+
+            <!-- Блок 5: Packages -->
+            <div class="block">
+                <div class="block-title">
+                    <i class="fas fa-shopping-cart"></i>
+                    БЛОК 5: Packages & Prices
+                </div>
+                <div class="block-content" id="block5"></div>
+            </div>
+
+            <!-- Блок 6: Raw JSON -->
+            <div class="block">
+                <div class="block-title">
+                    <i class="fas fa-code"></i>
+                    БЛОК 6: JSON (copyable)
+                </div>
+                <div class="block-content" id="block6">
+                    <div class="upload-instructions">
+                        <button class="fill-form-instruction-btn" onclick="fillUploadForm()">
+                            <i class="fas fa-copy"></i> Скопировать JSON
+                        </button>
+                        
+                        <h4>📋 Альтернативные способы использования JSON:</h4>
+                        <ul>
+                            <li>1. Нажмите «Скопировать JSON» – данные скопируются в буфер</li>
+                            <li>2. Перейдите к форме в iframe</li>
+                            <li>3. Вставьте JSON в поле «JSON с данными пина» вручную</li>
+                            <li>4. Прикрепите изображение и нажмите «Добавить пин»</li>
+                        </ul>
+                        
+                        <div style="margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border-left: 4px solid #ffd700;">
+                            <strong>💡 Совет:</strong> JSON данные из блока 5 содержат всю необходимую информацию для создания пина Pinterest - название, описание, хэштеги и ссылку.
+                        </div>
+                    </div>
+                    
+                    <!-- Форма для загрузки пина -->
+                    <div>
+                        <iframe 
+                            id="uploadFrame"
+                            src="https://creativetype.site/admin/add_pin_from_json.php" 
+                            class="form-iframe"
+                            frameborder="0">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FIVERR RESULTS -->
+        <div class="results-fiverr" id="resultsFiverr">
+            <!-- F1: Основная информация -->
+            <div class="block">
+                <div class="block-title"><i class="fas fa-info-circle"></i> F1: Gig Information</div>
+                <div class="block-content" id="fblock1"></div>
+            </div>
+
+            <!-- F2: Images -->
+            <div class="block">
+                <div class="block-title"><i class="fas fa-images"></i> F2: Images</div>
+                <div class="block-content" id="fblock2"></div>
+            </div>
+
+            <!-- F3: Sora Prompt -->
+            <div class="block">
+                <div class="block-title"><i class="fas fa-image"></i> F3: Sora Prompt</div>
+                <div class="block-content" id="fblock3"></div>
+            </div>
+
+            <!-- F4: Pinterest SEO -->
+            <div class="block">
+                <div class="block-title"><i class="fab fa-pinterest"></i> F4: Pinterest SEO</div>
+                <div class="block-content" id="fblock4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function parseFont() {
+            const urlInput = document.getElementById('fontUrl');
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                alert('Пожалуйста, введите ссылку на шрифт');
+                return;
+            }
+
+            // Показываем загрузку
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+            document.querySelector('.parse-btn').disabled = true;
+
+            try {
+                const response = await fetch('/parse', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        font_url: url
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    displayResults(data);
+                }
+            } catch (error) {
+                showError('Ошибка соединения: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.querySelector('.parse-btn').disabled = false;
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('fontUrl').value = '';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+            document.querySelector('.parse-btn').disabled = false;
+            document.getElementById('fontUrl').focus();
+        }
+
+        function showError(message) {
+            document.getElementById('results').innerHTML = 
+                `<div class="error"><i class="fas fa-exclamation-triangle"></i> ${message}</div>`;
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function displayResults(data) {
+            // Блок 1: Основная информация (объединенный)
+            document.getElementById('block1').innerHTML = `
+                <div class="font-name">${data.font_name || 'Не найдено'}</div>
+                
+                ${data.description ? `
+                    <div class="font-description">${data.description}</div>
+                ` : '<div class="font-description">Описание не найдено</div>'}
+                
+                <div class="links">
+                    <div class="link-item">
+                        <strong>Ссылка на шрифт:</strong>
+                        <a href="${data.font_url}" target="_blank">${data.font_url}</a>
+                    </div>
+                    <div class="link-item">
+                        <strong>Партнерская ссылка:</strong>
+                        <a href="${data.affiliate_url}" target="_blank">${data.affiliate_url}</a>
+                    </div>
+                </div>
+            `;
+
+            // Блок 2: Глифы с превью
+            if (data.all_glyph_images && data.all_glyph_images.length > 0) {
+                const glyphGallery = data.all_glyph_images.map(img => `
+                    <div class="glyph-item">
+                        <img src="${img}" alt="Font glyphs" onerror="this.parentElement.style.display='none'">
+                        <a href="${img}" target="_blank">${img.split('/').pop()}</a>
+                    </div>
+                `).join('');
+                
+                document.getElementById('block2').innerHTML = `
+                    <div class="glyph-gallery">
+                        ${glyphGallery}
+                    </div>
+                `;
+            } else {
+                document.getElementById('block2').innerHTML = `
+                    <div class="no-glyphs">
+                        <i class="fas fa-image"></i>
+                        <p>Изображения глифов не найдены</p>
+                    </div>
+                `;
+            }
+
+            // Блок 3: Промпт
+            document.getElementById('block3').innerHTML = `
+                <div class="prompt-container">
+                    <button class="copy-prompt-btn" onclick="copyPrompt(this)">
+                        <i class="fas fa-copy"></i> Копировать
+                    </button>
+                    <div class="prompt-box">${data.image_prompt || 'Промпт не найден'}</div>
+                </div>
+            `;
+
+            // Блок 4: Pinterest SEO
+            const seo = data.pinterest_seo || {};
+            document.getElementById('block4').innerHTML = `
+                <h4>PIN TITLE OPTIONS:</h4>
+                <ul class="seo-list">
+                    ${(seo.pin_titles || []).map((title, i) => `<li>${i + 1}. ${title}</li>`).join('')}
+                </ul>
+                
+                <h4>PIN DESCRIPTION:</h4>
+                <div class="description">${seo.pin_description || 'Не найдено'}</div>
+                
+                <h4>KEYWORDS USED:</h4>
+                <div class="keywords">
+                    ${(seo.keywords_used || []).map(keyword => `<span class="keyword">${keyword}</span>`).join('')}
+                </div>
+                
+                <h4>OPTIMIZATION NOTES:</h4>
+                <p>${seo.optimization_notes || 'Не найдено'}</p>
+            `;
+
+            // Блок 5: JSON
+            const jsonData = data.pinterest_json || {};
+            const jsonString = JSON.stringify(jsonData, null, 2);
+            document.getElementById('block5').innerHTML = `
+                <div class="json-container">
+                    <button class="copy-btn" onclick="copyJson(this)">
+                        <i class="fas fa-copy"></i> Копировать
+                    </button>
+                    <div class="json-code">${jsonString}</div>
+                </div>
+            `;
+
+            document.getElementById('results').style.display = 'block';
+            
+            // Сохраняем JSON для заполнения формы
+            window.currentJsonData = jsonString;
+        }
+
+        function copyPrompt(button) {
+            try {
+                // Находим элемент с промптом
+                const promptElement = button.nextElementSibling;
+                if (!promptElement) {
+                    console.error('Элемент с промптом не найден');
+                    alert('Ошибка: элемент с промптом не найден');
+                    return;
+                }
+                
+                // Получаем текст промпта
+                let promptText = promptElement.textContent || promptElement.innerText;
+                
+                // Очищаем текст от лишних пробелов
+                promptText = promptText.trim();
+                
+                console.log('Копирую промпт:', promptText.substring(0, 100) + '...');
+                
+                if (!promptText) {
+                    console.error('Промпт пуст');
+                    alert('Ошибка: промпт пуст');
+                    return;
+                }
+                
+                // Пробуем современный API
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(promptText).then(() => {
+                        console.log('Промпт скопирован через clipboard API');
+                        button.innerHTML = '<i class="fas fa-check"></i> Скопировано!';
+                        button.classList.add('copied');
+                        setTimeout(() => {
+                            button.innerHTML = '<i class="fas fa-copy"></i> Копировать';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Ошибка clipboard API:', err);
+                        fallbackCopyPrompt(promptText, button);
+                    });
+                } else {
+                    console.log('Clipboard API недоступен, используем fallback');
+                    fallbackCopyPrompt(promptText, button);
+                }
+                
+            } catch (error) {
+                console.error('Общая ошибка копирования промпта:', error);
+                alert('Ошибка копирования: ' + error.message);
+            }
+        }
+        
+        function fallbackCopyPrompt(text, button) {
+            try {
+                // Fallback для старых браузеров
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-9999px';
+                textArea.style.top = '0';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                if (successful) {
+                    console.log('Промпт скопирован через execCommand');
+                    button.innerHTML = '<i class="fas fa-check"></i> Скопировано!';
+                    button.classList.add('copied');
+                    setTimeout(() => {
+                        button.innerHTML = '<i class="fas fa-copy"></i> Копировать';
+                        button.classList.remove('copied');
+                    }, 2000);
+                } else {
+                    throw new Error('execCommand failed');
+                }
+                
+            } catch (err) {
+                console.error('Fallback тоже не сработал:', err);
+                
+                // Последний шанс - показать промпт в alert для ручного копирования
+                const shortText = text.length > 500 ? text.substring(0, 500) + '\n\n... (текст обрезан)' : text;
+                prompt('Скопируйте промпт вручную:', shortText);
+            }
+        }
+
+        function copyJson(button) {
+            try {
+                // Находим элемент с JSON
+                const jsonElement = button.nextElementSibling;
+                if (!jsonElement) {
+                    console.error('Элемент с JSON не найден');
+                    alert('Ошибка: элемент с JSON не найден');
+                    return;
+                }
+                
+                // Получаем текст JSON
+                let jsonText = jsonElement.textContent || jsonElement.innerText;
+                
+                // Очищаем текст от лишних пробелов
+                jsonText = jsonText.trim();
+                
+                console.log('Копирую JSON:', jsonText.substring(0, 100) + '...');
+                
+                if (!jsonText) {
+                    console.error('JSON пуст');
+                    alert('Ошибка: JSON пуст');
+                    return;
+                }
+                
+                // Пробуем современный API
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(jsonText).then(() => {
+                        console.log('JSON скопирован через clipboard API');
+                        button.innerHTML = '<i class="fas fa-check"></i> Скопировано!';
+                        button.classList.add('copied');
+                        setTimeout(() => {
+                            button.innerHTML = '<i class="fas fa-copy"></i> Копировать';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Ошибка clipboard API:', err);
+                        fallbackCopyJson(jsonText, button);
+                    });
+                } else {
+                    console.log('Clipboard API недоступен, используем fallback');
+                    fallbackCopyJson(jsonText, button);
+                }
+                
+            } catch (error) {
+                console.error('Общая ошибка копирования JSON:', error);
+                alert('Ошибка копирования: ' + error.message);
+            }
+        }
+        
+        function fallbackCopyJson(text, button) {
+            try {
+                // Fallback для старых браузеров
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-9999px';
+                textArea.style.top = '0';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                if (successful) {
+                    console.log('JSON скопирован через execCommand');
+                    button.innerHTML = '<i class="fas fa-check"></i> Скопировано!';
+                    button.classList.add('copied');
+                    setTimeout(() => {
+                        button.innerHTML = '<i class="fas fa-copy"></i> Копировать';
+                        button.classList.remove('copied');
+                    }, 2000);
+                } else {
+                    throw new Error('execCommand failed');
+                }
+                
+            } catch (err) {
+                console.error('Fallback тоже не сработал:', err);
+                
+                // Последний шанс - показать JSON в alert для ручного копирования
+                const shortText = text.length > 1000 ? text.substring(0, 1000) + '\n\n... (JSON обрезан)' : text;
+                prompt('Скопируйте JSON вручную:', shortText);
+            }
+        }
+
+        function fillUploadForm() {
+            if (!window.currentJsonData) {
+                alert('JSON данные не найдены. Сначала выполните анализ шрифта.');
+                return;
+            }
+
+            // Просто копируем JSON в буфер обмена
+            copyJsonToClipboard();
+        }
+
+        function copyJsonToClipboard() {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(window.currentJsonData).then(() => {
+                    alert('✅ JSON скопирован в буфер обмена!\n\nТеперь вставьте его вручную в форму.');
+                }).catch(() => {
+                    fallbackCopyForUpload();
+                });
+            } else {
+                fallbackCopyForUpload();
+            }
+        }
+
+        // Fallback для старых браузеров, если Clipboard API недоступен
+        function fallbackCopyForUpload() {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = window.currentJsonData;
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                if (ok) {
+                    alert('✅ JSON скопирован! Вставьте его вручную в форму.');
+                } else {
+                    throw new Error('execCommand failed');
+                }
+            } catch (err) {
+                alert('Не удалось скопировать JSON автоматически. Скопируйте его вручную из блока 5.');
+            }
+        }
+
+        // Обработка Enter в поле ввода
+        document.getElementById('fontUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                parseFont();
+            }
+        });
+
+        async function parseFiverr() {
+            const urlInput = document.getElementById('gigUrl');
+            const url = urlInput.value.trim();
+
+            if (!url) {
+                alert('Введите ссылку на Fiverr Gig');
+                return;
+            }
+
+            // Показываем загрузку (используем общий спиннер)
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultsFiverr').style.display = 'none';
+
+            try {
+                const response = await fetch('/parse_fiverr', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gig_url: url })
+                });
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    displayFiverrResults(data);
+                }
+            } catch (err) {
+                alert('Ошибка: ' + err.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function displayFiverrResults(data) {
+            // F1
+            document.getElementById('fblock1').innerHTML = `
+                <div class="font-name">${data.gig_title || 'Gig Title'}</div>
+                <div class="font-description">${data.description || 'Description not found'}</div>
+                ${data.about ? `<div class="font-description" style="margin-top:1rem;background:#fffbe6;border-left-color:#ffd700"><strong>About this gig:</strong><br>${data.about}</div>` : ''}
+                <div class="links">
+                    <div class="link-item"><strong>Affiliate link:</strong><a href="${data.affiliate_url}" target="_blank">${data.affiliate_url}</a></div>
+                    <div class="link-item"><strong>Seller:</strong> ${data.seller?.username || 'N/A'} (${data.seller?.rating || '—'}★, ${data.seller?.reviews || 0} reviews)</div>
+                </div>`;
+
+            // F2 images
+            if (data.images && data.images.length) {
+                const imgs = data.images.map(img => `<div class="glyph-item"><img src="${img}" alt="image" onerror="this.parentElement.style.display='none'"><a href="${img}" target="_blank">${img.split('/').pop()}</a></div>`).join('');
+                document.getElementById('fblock2').innerHTML = `<div class="glyph-gallery">${imgs}</div>`;
+            } else {
+                document.getElementById('fblock2').innerHTML = '<div class="no-glyphs">No images</div>';
+            }
+
+            // F3 Sora prompt
+            document.getElementById('fblock3').innerHTML = `
+                <div class="prompt-container">
+                    <button class="copy-prompt-btn" onclick="copyPrompt(this)"><i class="fas fa-copy"></i> Копировать</button>
+                    <div class="prompt-box">${data.sora_prompt || ''}</div>
+                </div>`;
+
+            // F4 Pinterest SEO
+            if (data.pinterest_seo) {
+                const seo = data.pinterest_seo;
+                document.getElementById('fblock4').innerHTML = `
+                    <h4>PIN TITLE:</h4>
+                    <div class="font-name" style="font-size:1.1rem">${seo.pin_title||''}</div>
+                    <h4>DESCRIPTION:</h4>
+                    <div class="description">${seo.pin_description||''}</div>
+                    <h4>KEYWORDS:</h4>
+                    <div class="keywords">${(seo.keywords_used||[]).map(k=>`<span class="keyword">${k}</span>`).join('')}</div>`;
+            } else {
+                document.getElementById('fblock4').innerHTML = '<div class="no-glyphs">SEO not generated</div>';
+            }
+
+            // Показываем
+            document.getElementById('resultsFiverr').style.display = 'block';
+        }
+    </script>
+</body>
+</html> 

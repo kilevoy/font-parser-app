@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "name": "Creative Fabrica Font Parser → Google Sheets",
+    "version": "1.0"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": [
+          {
+            "mode": "everyDay",
+            "hour": 8,
+            "minute": 0
+          }
+        ]
+      },
+      "id": 1,
+      "name": "Cron",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://api.firecrawl.dev/v1/scrape",
+        "authentication": "basicAuth",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "{\n  \"url\": \"https://www.creativefabrica.com/fonts/\",\n  \"formats\": [\"html\"],\n  \"waitFor\": 3000\n}"
+      },
+      "id": 2,
+      "name": "Firecrawl Scrape",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [300, 0],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "firecrawl",
+          "name": "firecrawl"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const html = items[0].json.data?.html || items[0].json.data || '';\nconst regex = /https?:\\/\\/www\\.creativefabrica\\.com\\/product\\/[^\"'>\\s]+/g;\nconst matches = Array.from(new Set(html.match(regex) || []));\nif (!matches.length) throw new Error('No product links found');\nconst pick = matches[Math.floor(Math.random() * matches.length)];\nreturn [{ json: { font_url: pick } }];"
+      },
+      "id": 3,
+      "name": "Pick URL",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [600, 0]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "http://127.0.0.1:5000/parse",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "{ \n  \"font_url\": \"={{ $json.font_url }}\" \n}"
+      },
+      "id": 4,
+      "name": "Local Parser",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [900, 0]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "YOUR_SHEET_ID",
+        "range": "Sheet1!A1",
+        "valueInputMode": "USER_ENTERED",
+        "options": {},
+        "additionalFields": {
+          "data": "={{ JSON.stringify($json) }}"
+        }
+      },
+      "id": 5,
+      "name": "Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [1200, 0],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "googleSheets",
+          "name": "googleSheets"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cron": {
+      "main": [
+        [
+          {
+            "node": "Firecrawl Scrape",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Firecrawl Scrape": {
+      "main": [
+        [
+          {
+            "node": "Pick URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick URL": {
+      "main": [
+        [
+          {
+            "node": "Local Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Local Parser": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+} 
