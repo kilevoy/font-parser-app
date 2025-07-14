@@ -28,15 +28,9 @@ class FontWebParser:
             "Authorization": f"Bearer {FIRECRAWL_API_KEY}",
             "Content-Type": "application/json"
         }
-        # Простая инициализация без проблемных параметров
-        try:
-            self.openai_client = OpenAI(
-                api_key=OPENAI_API_KEY,
-                base_url=OPENAI_BASE_URL
-            )
-        except Exception as e:
-            print(f"Error initializing OpenAI client: {str(e)}")
-            self.openai_client = None
+        # Временно отключаем OpenAI для тестирования
+        self.openai_client = None
+        print("OpenAI client temporarily disabled for testing")
     
     def parse_font_from_url(self, font_url):
         """Парсинг шрифта по URL"""
