@@ -28,10 +28,15 @@ class FontWebParser:
             "Authorization": f"Bearer {FIRECRAWL_API_KEY}",
             "Content-Type": "application/json"
         }
-        self.openai_client = OpenAI(
-            api_key=OPENAI_API_KEY,
-            base_url=OPENAI_BASE_URL
-        )
+        # Простая инициализация без проблемных параметров
+        try:
+            self.openai_client = OpenAI(
+                api_key=OPENAI_API_KEY,
+                base_url=OPENAI_BASE_URL
+            )
+        except Exception as e:
+            print(f"Error initializing OpenAI client: {str(e)}")
+            self.openai_client = None
     
     def parse_font_from_url(self, font_url):
         """Парсинг шрифта по URL"""
@@ -154,6 +159,12 @@ class FontWebParser:
 
 Контент: {content[:20000]}"""
 
+        if not self.openai_client:
+            return {
+                "name": "Font Name",
+                "description": "Beautiful typography font"
+            }
+
         try:
             response = self.openai_client.chat.completions.create(
                 model=MODEL,
@@ -169,6 +180,7 @@ class FontWebParser:
             return result
             
         except Exception as e:
+            print(f"OpenAI API error: {str(e)}")
             return {
                 "name": "Font Name",
                 "description": "Beautiful typography font"
@@ -259,6 +271,18 @@ Provide response in JSON format:
   "optimization_notes": "Brief explanation of SEO choices"
 }}"""
 
+        if not self.openai_client:
+            return {
+                "pin_titles": [
+                    f"Beautiful {font_name} - Perfect Typography",
+                    f"Download {font_name} - Stunning Font Design", 
+                    f"Creative {font_name} - Typography Collection"
+                ],
+                "pin_description": f"Discover the amazing {font_name}! Perfect for your design projects.",
+                "keywords_used": ["font", "typography", "design"],
+                "optimization_notes": "Basic SEO structure"
+            }
+
         try:
             response = self.openai_client.chat.completions.create(
                 model=MODEL,
@@ -273,6 +297,7 @@ Provide response in JSON format:
             return json.loads(response.choices[0].message.content)
             
         except Exception as e:
+            print(f"OpenAI API error in generate_pinterest_seo: {str(e)}")
             return {
                 "pin_titles": [
                     f"Beautiful {font_name} - Perfect Typography",
@@ -312,6 +337,23 @@ Provide response in JSON format:
   "link": "{self.get_affiliate_url(main_url)}"
 }}"""
 
+        if not self.openai_client:
+            return {
+                "category": "Typography",
+                "title": f"{font_name} - Beautiful Typography Font",
+                "description": f"Discover the amazing {font_name}! Perfect for your design projects.",
+                "alt_text": f"{font_name} font preview showing elegant typography design and character set",
+                "hashtags": [
+                    "#fonts",
+                    "#typography", 
+                    "#design",
+                    "#creativefonts",
+                    "#fontdownload",
+                    "#designresources"
+                ],
+                "link": self.get_affiliate_url(main_url)
+            }
+
         try:
             response = self.openai_client.chat.completions.create(
                 model=MODEL,
@@ -345,6 +387,7 @@ Provide response in JSON format:
             return ordered_result
             
         except Exception as e:
+            print(f"OpenAI API error in generate_pinterest_json_format: {str(e)}")
             return {
                 "category": "Typography",
                 "title": f"{font_name} - Beautiful Typography Font",
@@ -373,6 +416,11 @@ Provide response in JSON format:
 
         prompt = f"""#SORA_PROMPT\nGenerate a stunning vertical Pinterest Pin 9:16 that instantly stands out as an advertisement for the \"{font_name}\" font.\n\nReference glyph images: [REF_GLYPH_1]({ref1}) and [REF_GLYPH_2]({ref2}). If needed, use product preview [REF_PREVIEW]({ref_preview}) for overall style guidance. Replicate glyph shapes precisely.\n\nScene: highly polished, {font_style} vibe with luxurious composition. Central focus: the word \"{font_name}\" written in its genuine font style, large and crisp. Add subtle tagline like \"Download the font now!\" beneath. Background should complement the font's mood based on this description: {description[:300]}. Use rich colours, professional lighting, depth of field, elegant props. No watermarks or logos. Output: one breathtaking frame suitable for Pinterest advertising."""
 
+        if not self.openai_client:
+            # Fallback: базовый шаблон
+            base_prompt = f"Elegant Pinterest pin featuring the word '{font_name}' in its real font style, {font_style} themed, high-end look, professional lighting, aesthetic composition, vertical 9:16, no branding, no watermark."
+            return base_prompt
+
         try:
             response = self.openai_client.chat.completions.create(
                 model=MODEL,
@@ -383,7 +431,8 @@ Provide response in JSON format:
                 temperature=0.8
             )
             return response.choices[0].message.content.strip()
-        except Exception:
+        except Exception as e:
+            print(f"OpenAI API error in generate_image_prompt: {str(e)}")
             # Fallback: базовый шаблон
             base_prompt = f"Elegant Pinterest pin featuring the word '{font_name}' in its real font style, {font_style} themed, high-end look, professional lighting, aesthetic composition, vertical 9:16, no branding, no watermark."
             return base_prompt
