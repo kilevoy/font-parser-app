@@ -22,7 +22,22 @@ class FiverrParser:
             'Content-Type': 'application/json'
         }
         try:
+            # Try to initialize OpenAI client with minimal parameters
             self.openai = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
+        except TypeError as e:
+            # Handle the 'proxies' argument error specifically
+            if 'proxies' in str(e):
+                print(f"OpenAI client initialization failed due to 'proxies' argument: {str(e)}")
+                print("Falling back to OpenAI client without problematic parameters")
+                try:
+                    # Try with only essential parameters
+                    self.openai = OpenAI(api_key=OPENAI_API_KEY)
+                except Exception as e2:
+                    print(f"OpenAI client initialization failed completely: {str(e2)}")
+                    self.openai = None
+            else:
+                print(f"Error initializing OpenAI client in FiverrParser: {str(e)}")
+                self.openai = None
         except Exception as e:
             print(f"Error initializing OpenAI client in FiverrParser: {str(e)}")
             self.openai = None

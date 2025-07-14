@@ -550,8 +550,10 @@ Elements: Modern geometric shapes, clean lines, minimal decorative elements.'''
 
 # Создаем экземпляр парсера
 parser = FontWebParser()
-# Экземпляр парсера Fiverr
-fiverr_parser_instance = FiverrParser()
+# Экземпляр парсера Fiverr - временно отключаем для тестирования
+# fiverr_parser_instance = FiverrParser()
+fiverr_parser_instance = None
+print("FiverrParser temporarily disabled for testing")
 
 @app.route('/')
 def index():
@@ -579,6 +581,9 @@ def parse_fiverr():
 
     if not gig_url:
         return jsonify({"error": "Введите ссылку на Fiverr gig"})
+
+    if fiverr_parser_instance is None:
+        return jsonify({"error": "Fiverr parser temporarily disabled for testing"})
 
     result = fiverr_parser_instance.parse(gig_url)
     return jsonify(result)
