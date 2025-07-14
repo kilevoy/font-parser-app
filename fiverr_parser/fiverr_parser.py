@@ -21,7 +21,11 @@ class FiverrParser:
             'Authorization': f'Bearer {APIFY_TOKEN}',
             'Content-Type': 'application/json'
         }
-        self.openai = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
+        try:
+            self.openai = OpenAI(api_key=OPENAI_API_KEY, base_url=OPENAI_BASE_URL)
+        except Exception as e:
+            print(f"Error initializing OpenAI client in FiverrParser: {str(e)}")
+            self.openai = None
 
     def is_valid(self, url:str):
         p = urlparse(url)
@@ -65,9 +69,18 @@ class FiverrParser:
 
         # если основные поля не найдены регулярками – используем OpenAI для структурного парсинга
         if not title:
-            try:
-                md = data.get('markdown','')[:12000]
-                prompt = f"""You are given the raw markdown of a Fiverr gig page. Extract the following fields and return EXACT JSON with these keys:
+            if not self.openai:
+                title = 'Gig Title'
+                desc = ''
+                seller = 'seller'
+                rating_val = None
+                reviews = None
+                images = []
+                packages_json = []
+            else:
+                try:
+                    md = data.get('markdown','')[:12000]
+                    prompt = f"""You are given the raw markdown of a Fiverr gig page. Extract the following fields and return EXACT JSON with these keys:
 {{
   \"gig_title\": \"...\",
   \"description\": \"...\",
@@ -79,23 +92,23 @@ class FiverrParser:
 }}
 
 Only output JSON, no other text. Markdown:\n---\n{md}\n---"""
-                ai_resp = self.openai.chat.completions.create(model=MODEL,messages=[{"role":"user","content":prompt}],response_format={"type":"json_object"},temperature=0)
-                parsed = json.loads(ai_resp.choices[0].message.content)
-                title = parsed.get('gig_title','')
-                desc = parsed.get('description','')
-                seller = parsed.get('seller_username','')
-                rating_val = parsed.get('rating')
-                reviews = parsed.get('reviews')
-                images = parsed.get('images',[])
-                packages_json = parsed.get('package_prices',[])
-            except Exception:
-                title = title or 'Gig Title'
-                desc = ''
-                seller = 'seller'
-                rating_val = None
-                reviews = None
-                images = []
-                packages_json = []
+                    ai_resp = self.openai.chat.completions.create(model=MODEL,messages=[{"role":"user","content":prompt}],response_format={"type":"json_object"},temperature=0)
+                    parsed = json.loads(ai_resp.choices[0].message.content)
+                    title = parsed.get('gig_title','')
+                    desc = parsed.get('description','')
+                    seller = parsed.get('seller_username','')
+                    rating_val = parsed.get('rating')
+                    reviews = parsed.get('reviews')
+                    images = parsed.get('images',[])
+                    packages_json = parsed.get('package_prices',[])
+                except Exception:
+                    title = title or 'Gig Title'
+                    desc = ''
+                    seller = 'seller'
+                    rating_val = None
+                    reviews = None
+                    images = []
+                    packages_json = []
         else:
             desc_match = re.search(r'<meta[^>]+name="description"[^>]+content="([^"]+)"', html)
             desc = desc_match.group(1) if desc_match else ''
@@ -136,6 +149,10 @@ Only output JSON, no other text. Markdown:\n---\n{md}\n---"""
     def generate_prompt(self, title, description, refs):
         refs_txt = ', '.join(refs)
         prompt = f"Create an eye-catching vertical Pinterest Pin (9:16) advertising my creative service titled '{title}'. Use references {refs_txt} to match style. Highlight key benefits from description: {description[:200]} …. Add clear call-to-action 'Order Now'. Luxurious, professional design, sharp typography, high contrast, no watermark. #SORA_PROMPT"
+        
+        if not self.openai:
+            return prompt
+            
         try:
             res = self.openai.chat.completions.create(model=MODEL, messages=[{"role":"user","content":prompt}], temperature=0.8)
             return res.choices[0].message.content.strip()
@@ -180,17 +197,20 @@ Only output JSON, no other text. Markdown:\n---\n{md}\n---"""
                  t = t.rsplit(' ', 1)[0]
             return t.capitalize()
 
-        try:
-            resp = self.openai.chat.completions.create(
-                model=MODEL,
-                messages=[{"role": "system", "content": "You are a Pinterest SEO expert following instructions precisely."}, {"role": "user", "content": prompt}],
-                response_format={"type": "json_object"},
-                temperature=0.8,
-                timeout=25.0
-            )
-            result = json.loads(resp.choices[0].message.content)
-        except Exception:
+        if not self.openai:
             result = {}
+        else:
+            try:
+                resp = self.openai.chat.completions.create(
+                    model=MODEL,
+                    messages=[{"role": "system", "content": "You are a Pinterest SEO expert following instructions precisely."}, {"role": "user", "content": prompt}],
+                    response_format={"type": "json_object"},
+                    temperature=0.8,
+                    timeout=25.0
+                )
+                result = json.loads(resp.choices[0].message.content)
+            except Exception:
+                result = {}
 
         final_title = sanitize_title(result.get('pin_title', ''))
         if not final_title:
